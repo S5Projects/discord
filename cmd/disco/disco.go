@@ -8,7 +8,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/ecnepsnai/discord"
+	"github.com/S5Projects/discord"
 )
 
 func main() {
@@ -18,9 +18,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	discord.WebhookURL = *u
+	wh, err := discord.New(*u)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to initialize webhooks\n")
+		os.Exit(1)
+	}
 
-	discord.Say(getStdin())
+	wh.Say(getStdin())
 }
 
 func getStdin() string {
