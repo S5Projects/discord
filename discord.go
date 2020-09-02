@@ -13,13 +13,23 @@ import (
 	"net/http"
 )
 
-// WebhookURL your discord webhook URL
-var WebhookURL string
+// New Get new Webhook instance
+func New(url string) (*Webhook, error) {
+	return &Webhook{
+		webhookURL: url,
+	}, nil
+}
+
+// Webhook main struct
+type Webhook struct {
+	// webhookURL your discord webhook URL
+	webhookURL string
+}
 
 // Say sends the provided message to the channel for which the webhook is configured.
 // If WebhookURL is not set, this does nothing.
-func Say(message string) error {
-	return Post(PostOptions{Content: message})
+func (w *Webhook) Say(message string) error {
+	return w.Post(PostOptions{Content: message})
 }
 
 // PostOptions describes all possible options for a post
@@ -72,8 +82,8 @@ type Footer struct {
 
 // Post will post a message to the channel for which the webhook is configured.
 // Unlike `discord.Say()`, Post gives you full control over the message.
-func Post(content PostOptions) error {
-	if WebhookURL == "" {
+func (w *Webhook) Post(content PostOptions) error {
+	if w.webhookURL == "" {
 		return nil
 	}
 
@@ -82,7 +92,7 @@ func Post(content PostOptions) error {
 		return err
 	}
 
-	resp, err := http.Post(WebhookURL, "application/JSON", bytes.NewReader(data))
+	resp, err := http.Post(w.webhookURL, "application/JSON", bytes.NewReader(data))
 	if err != nil {
 		return err
 	}
@@ -102,34 +112,34 @@ type FileOptions struct {
 // UploadFile will post a message to the channel for which the webhook is configured
 // and attach the specified file to your message. Rich embeds are not supported and
 // will be ignored if any are specified.
-func UploadFile(content PostOptions, file FileOptions) error {
-	if WebhookURL == "" {
+func (w *Webhook) UploadFile(content PostOptions, file FileOptions) error {
+	if w.webhookURL == "" {
 		return nil
 	}
 
 	var b bytes.Buffer
-	w := multipart.NewWriter(&b)
-	fileWriter, err := w.CreateFormFile("file", file.FileName)
+	wr := multipart.NewWriter(&b)
+	defer wr.Close()
+	fileWriter, err := wr.CreateFormFile("file", file.FileName)
 	if err != nil {
 		return err
 	}
 	if _, err := io.Copy(fileWriter, file.Reader); err != nil {
 		return err
 	}
-	payloadWriter, err := w.CreateFormField("payload_json")
+	payloadWriter, err := wr.CreateFormField("payload_json")
 	if err != nil {
 		return err
 	}
 	if err := json.NewEncoder(payloadWriter).Encode(content); err != nil {
 		return err
 	}
-	w.Close()
 
-	req, err := http.NewRequest("POST", WebhookURL, &b)
+	req, err := http.NewRequest("POST", w.webhookURL, &b)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", w.FormDataContentType())
+	req.Header.Set("Content-Type", wr.FormDataContentType())
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err

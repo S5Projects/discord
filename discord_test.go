@@ -33,16 +33,22 @@ func TestMain(m *testing.M) {
 }
 
 func TestSay(t *testing.T) {
-	discord.WebhookURL = webhookURL
-	err := discord.Say("Hello, world!")
+	wh, err := discord.New(webhookURL)
+	if err != nil {
+		panic(err)
+	}
+	err = wh.Say("Hello, world!")
 	if err != nil {
 		t.Errorf("Error posting plain-text message: %s", err.Error())
 	}
 }
 
 func TestPost(t *testing.T) {
-	discord.WebhookURL = webhookURL
-	err := discord.Post(discord.PostOptions{
+	wh, err := discord.New(webhookURL)
+	if err != nil {
+		panic(err)
+	}
+	err = wh.Post(discord.PostOptions{
 		Content: "Hello, world!",
 		Embeds: []discord.Embed{
 			{
@@ -62,7 +68,10 @@ func TestPost(t *testing.T) {
 }
 
 func TestFileUpload(t *testing.T) {
-	discord.WebhookURL = webhookURL
+	wh, err := discord.New(webhookURL)
+	if err != nil {
+		panic(err)
+	}
 	f, err := os.OpenFile(path.Join(".", "discord.go"), os.O_RDONLY, 0644)
 	if err != nil {
 		t.Fatalf("Error opening file: %s", err.Error())
@@ -75,7 +84,7 @@ func TestFileUpload(t *testing.T) {
 		FileName: "discord.go",
 		Reader:   f,
 	}
-	if err := discord.UploadFile(content, fileOptions); err != nil {
+	if err := wh.UploadFile(content, fileOptions); err != nil {
 		t.Errorf("Error posting message with file attachment: %s", err.Error())
 	}
 }
