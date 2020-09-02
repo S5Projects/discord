@@ -1,7 +1,7 @@
 package discord_test
 
 import (
-	"github.com/ecnepsnai/discord"
+	"github.com/S5Projects/discord"
 )
 
 func ExampleSay() {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ecnepsnai/discord"
+	"github.com/S5Projects/discord"
 )
 
 var webhookURL = ""
